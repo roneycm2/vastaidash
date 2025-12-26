@@ -1,0 +1,6 @@
+# Domínios permitidos para clicar
+# Adicione um domínio por linha
+# Linhas começando com # são ignoradas
+# O script só clicará em anúncios desses domínios
+
+advogadoonline.pt

@@ -1,0 +1,18 @@
+2025/12/10-05:52:31.236 87e0 Reusing MANIFEST C:\Users\outros\liderbet\chrome_data_worker_2\Default\Local Storage\leveldb/MANIFEST-000001
+2025/12/10-05:52:31.243 87e0 Recovering log #14
+2025/12/10-05:52:31.247 87e0 Reusing old log C:\Users\outros\liderbet\chrome_data_worker_2\Default\Local Storage\leveldb/000014.log 
+2025/12/10-05:53:31.259 7b04 Level-0 table #18: started
+2025/12/10-05:53:31.267 7b04 Level-0 table #18: 62549 bytes OK
+2025/12/10-05:53:31.268 7b04 Delete type=0 #14
+2025/12/10-05:53:31.270 7b04 Compacting 4@0 + 1@1 files
+2025/12/10-05:53:31.277 7b04 Generated table #19@0: 26 keys, 59157 bytes
+2025/12/10-05:53:31.277 7b04 Compacted 4@0 + 1@1 files => 59157 bytes
+2025/12/10-05:53:31.279 7b04 compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/12/10-05:53:31.279 7b04 Delete type=2 #7
+2025/12/10-05:53:31.279 7b04 Delete type=2 #10
+2025/12/10-05:53:31.279 7b04 Delete type=2 #12
+2025/12/10-05:53:31.279 7b04 Delete type=2 #15
+2025/12/10-05:53:31.280 7b04 Delete type=2 #18
+2025/12/10-05:55:38.146 9300 Level-0 table #21: started
+2025/12/10-05:55:38.155 9300 Level-0 table #21: 72774 bytes OK
+2025/12/10-05:55:38.157 9300 Delete type=0 #17

@@ -1,0 +1,5 @@
+{
+  "tabs_per_machine": 5,
+  "use_proxy": true,
+  "headless": true
+}

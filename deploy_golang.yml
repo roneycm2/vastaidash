@@ -1,0 +1,137 @@
+---
+- name: Instalar Go, compilar e executar abrir_site_proxy.go
+  hosts: all
+  become: yes
+  vars:
+    go_version: "1.21.5"
+    go_install_dir: "/usr/local"
+    app_name: "abrir_site_proxy"
+    app_dir: "/opt/{{ app_name }}"
+    site_url: "7k.bet.br"
+    num_threads: "5"
+  
+  tasks:
+    - name: Verificar se Go já está instalado
+      command: which go
+      register: go_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Baixar Go
+      get_url:
+        url: "https://go.dev/dl/go{{ go_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/go{{ go_version }}.linux-amd64.tar.gz"
+      when: go_check.rc != 0
+
+    - name: Remover instalação antiga do Go (se existir)
+      file:
+        path: "{{ go_install_dir }}/go"
+        state: absent
+      when: go_check.rc != 0
+
+    - name: Extrair Go
+      unarchive:
+        src: "/tmp/go{{ go_version }}.linux-amd64.tar.gz"
+        dest: "{{ go_install_dir }}"
+        remote_src: yes
+      when: go_check.rc != 0
+
+    - name: Configurar variáveis de ambiente do Go
+      lineinfile:
+        path: /etc/profile.d/golang.sh
+        line: "{{ item }}"
+        create: yes
+        mode: '0644'
+      loop:
+        - "export GOROOT={{ go_install_dir }}/go"
+        - "export GOPATH=$HOME/go"
+        - "export PATH=$PATH:{{ go_install_dir }}/go/bin:$GOPATH/bin"
+      when: go_check.rc != 0
+
+    - name: Criar diretório da aplicação
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copiar arquivo abrir_site_proxy.go
+      copy:
+        src: abrir_site_proxy.go
+        dest: "{{ app_dir }}/abrir_site_proxy.go"
+        mode: '0644'
+
+    - name: Inicializar módulo Go
+      command: go mod init {{ app_name }}
+      args:
+        chdir: "{{ app_dir }}"
+        creates: "{{ app_dir }}/go.mod"
+      environment:
+        GOROOT: "{{ go_install_dir }}/go"
+        GOPATH: "/root/go"
+        PATH: "{{ ansible_env.PATH }}:{{ go_install_dir }}/go/bin"
+
+    - name: Baixar dependências Go
+      command: go get github.com/enetx/g github.com/enetx/surf
+      args:
+        chdir: "{{ app_dir }}"
+      environment:
+        GOROOT: "{{ go_install_dir }}/go"
+        GOPATH: "/root/go"
+        PATH: "{{ ansible_env.PATH }}:{{ go_install_dir }}/go/bin"
+
+    - name: Compilar aplicação
+      command: go build -o {{ app_name }} abrir_site_proxy.go
+      args:
+        chdir: "{{ app_dir }}"
+      environment:
+        GOROOT: "{{ go_install_dir }}/go"
+        GOPATH: "/root/go"
+        PATH: "{{ ansible_env.PATH }}:{{ go_install_dir }}/go/bin"
+      register: build_result
+
+    - name: Tornar executável
+      file:
+        path: "{{ app_dir }}/{{ app_name }}"
+        mode: '0755'
+
+    - name: Verificar se processo já está rodando
+      shell: pgrep -f "{{ app_name }}"
+      register: running_process
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Parar processo existente (se houver)
+      shell: pkill -f "{{ app_name }}"
+      when: running_process.rc == 0
+      ignore_errors: yes
+
+    - name: Executar aplicação em background
+      shell: |
+        nohup {{ app_dir }}/{{ app_name }} {{ site_url }} {{ num_threads }} > {{ app_dir }}/output.log 2>&1 &
+        echo $! > {{ app_dir }}/{{ app_name }}.pid
+      environment:
+        GOROOT: "{{ go_install_dir }}/go"
+        GOPATH: "/root/go"
+        PATH: "{{ ansible_env.PATH }}:{{ go_install_dir }}/go/bin"
+
+    - name: Aguardar alguns segundos para verificar se iniciou
+      wait_for:
+        timeout: 5
+      delegate_to: localhost
+
+    - name: Verificar se processo está rodando
+      shell: pgrep -f "{{ app_name }}"
+      register: process_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Mostrar status
+      debug:
+        msg:
+          - "✅ Aplicação compilada e executada com sucesso!"
+          - "📁 Diretório: {{ app_dir }}"
+          - "🚀 Processo PID: {{ process_check.stdout if process_check.rc == 0 else 'Não encontrado' }}"
+          - "📋 Logs: {{ app_dir }}/output.log"
+          - "🔧 Para parar: pkill -f {{ app_name }}"
+          - "📊 Para ver logs: tail -f {{ app_dir }}/output.log"
+

@@ -1,0 +1,9 @@
+{
+  "ws_endpoint": "ws://154.59.156.29:10113/chrome?timeout=1800000",
+  "proxy_server": "http://pybpm-ins-hxqlzicm.pyproxy.io:2510",
+  "proxy_username": "liderbet1-zone-adam-region-br",
+  "proxy_password": "Aa10203040",
+  "default_url": "https://api.ipify.org?format=json",
+  "default_workers": 20,
+  "use_proxy": true
+}

@@ -1,0 +1,86 @@
+---
+- name: Instalar Go, compilar e executar abrir_site_proxy.go com screen
+  hosts: all
+  become: yes
+  vars:
+    go_version: '1.21.5'
+    go_install_dir: '/usr/local'
+    app_name: 'abrir_site_proxy'
+    app_dir: '/opt/abrir_site_proxy'
+    site_url: '7k.bet.br'
+    num_threads: '2000'
+  
+  tasks:
+    - name: Instalar screen
+      shell: |
+        which screen || (apt-get update -qq && apt-get install -y -qq screen) || (yum install -y -q screen) || true
+      args:
+        executable: /bin/bash
+      ignore_errors: yes
+
+    - name: Baixar Go
+      get_url:
+        url: 'https://go.dev/dl/go{{ go_version }}.linux-amd64.tar.gz'
+        dest: '/tmp/go{{ go_version }}.linux-amd64.tar.gz'
+
+    - name: Remover Go antigo
+      file:
+        path: '{{ go_install_dir }}/go'
+        state: absent
+
+    - name: Extrair Go
+      unarchive:
+        src: '/tmp/go{{ go_version }}.linux-amd64.tar.gz'
+        dest: '{{ go_install_dir }}'
+        remote_src: yes
+
+    - name: Criar diretorio
+      file:
+        path: '{{ app_dir }}'
+        state: directory
+        mode: '0755'
+
+    - name: Copiar arquivo
+      copy:
+        src: abrir_site_proxy.go
+        dest: '{{ app_dir }}/abrir_site_proxy.go'
+        mode: '0644'
+
+    - name: Inicializar e compilar
+      shell: |
+        cd {{ app_dir }}
+        export GOROOT={{ go_install_dir }}/go
+        export GOPATH=/root/go
+        export PATH=$PATH:{{ go_install_dir }}/go/bin:$GOPATH/bin
+        go mod init {{ app_name }} 2>/dev/null || true
+        go get github.com/enetx/g github.com/enetx/surf
+        go build -o {{ app_name }} abrir_site_proxy.go
+        chmod +x {{ app_name }}
+      args:
+        executable: /bin/bash
+
+    - name: Parar processo antigo
+      shell: pkill -f {{ app_name }} || true; screen -X -S {{ app_name }} quit || true
+      ignore_errors: yes
+
+    - name: Executar com screen e 2000 threads
+      shell: |
+        cd {{ app_dir }}
+        which screen || (apt-get update -qq && apt-get install -y -qq screen) || (yum install -y -q screen)
+        screen -dmS {{ app_name }} bash -c './{{ app_name }} {{ site_url }} {{ num_threads }} > output.log 2>&1'
+        sleep 2
+        screen -list | grep {{ app_name }} && echo 'Executando em screen' || (nohup ./{{ app_name }} {{ site_url }} {{ num_threads }} > output.log 2>&1 & echo 'Executando com nohup')
+      args:
+        executable: /bin/bash
+      ignore_errors: yes
+
+    - name: Verificar processo
+      shell: pgrep -f {{ app_name }}
+      register: check
+      ignore_errors: yes
+
+    - name: Mostrar status
+      debug:
+        msg: 'Processo rodando com PID: {{ check.stdout }}'
+      when: check.rc == 0
+

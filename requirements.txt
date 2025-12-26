@@ -1,0 +1,10 @@
+selenium>=4.15.0
+selenium-wire>=5.1.0
+anticaptchaofficial>=1.0.55
+flask>=3.0.0
+blinker==1.6.3
+aiohttp>=3.9.0
+requests>=2.31.0
+rich>=13.0.0
+playwright>=1.49.0
+curl_cffi>=0.7.4

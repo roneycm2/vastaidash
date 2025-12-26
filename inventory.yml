@@ -1,0 +1,61 @@
+---
+all:
+  hosts:
+    servidor1:
+      ansible_host: 184.191.105.145
+      ansible_port: 21503
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor2:
+      ansible_host: 77.104.167.149
+      ansible_port: 48172
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor3:
+      ansible_host: 199.68.217.31
+      ansible_port: 20320
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor4:
+      ansible_host: 69.48.204.144
+      ansible_port: 41744
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor5:
+      ansible_host: 24.124.32.70
+      ansible_port: 48267
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor6:
+      ansible_host: 142.170.89.112
+      ansible_port: 23633
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor7:
+      ansible_host: 199.68.217.31
+      ansible_port: 16090
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor8:
+      ansible_host: 83.108.94.163
+      ansible_port: 41689
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+    
+    servidor9:
+      ansible_host: 77.104.167.148
+      ansible_port: 41108
+      ansible_user: root
+      ansible_ssh_private_key_file: C:\Users\outros\.ssh\id_rsa
+
+  vars:
+    # Variáveis globais (podem ser sobrescritas por host)
+    site_url: "7k.bet.br"
+    num_threads: "5"

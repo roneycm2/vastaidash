@@ -1,0 +1,36 @@
+======================================================================
+📊 RELATÓRIO FINAL - MODO ESCALA MÁXIMA
+======================================================================
+
+📅 Data: 11/12/2025 22:26:40
+⏱️ Tempo: 124m 12s
+🔄 Rodadas de busca: 99
+
+--------------------------------------------------
+🔍 Ads Encontrados: 15116
+🔗 Tracking Links: 342
+✅ Cliques OK: 4420
+❌ Cliques FAIL: 8096
+📈 Taxa de Sucesso: 35.3%
+⚡ Média: 35.6/min
+
+--------------------------------------------------
+📊 POR DOMÍNIO:
+   7k.bet.br: 1793 cliques
+   bullsbet.bet.br: 847 cliques
+   cassino.bet.br: 612 cliques
+   jogao.bet.br: 586 cliques
+   vera.bet.br: 582 cliques
+
+--------------------------------------------------
+📍 POR REGIÃO:
+   Sao Paulo: 662 cliques
+   Fortaleza: 583 cliques
+   Porto Alegre: 538 cliques
+   Recife: 533 cliques
+   Salvador: 515 cliques
+   Belo Horizonte: 493 cliques
+   Brasilia: 329 cliques
+   Manaus: 315 cliques
+   Rio de Janeiro: 309 cliques
+   Curitiba: 143 cliques

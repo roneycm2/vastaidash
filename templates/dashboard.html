@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vast.ai Dashboard - Máquinas Disponíveis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .action-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .action-bar .selected-count {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .action-bar .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            padding: 12px 30px;
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: bold;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .filters h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-item label {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .filter-item input, .filter-item select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .filter-item input:focus, .filter-item select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .machines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .machine-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid transparent;
+        }
+
+        .machine-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .machine-card.selected {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .machine-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .machine-checkbox {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .machine-id {
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .price {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .gpu-info {
+            margin-bottom: 15px;
+        }
+
+        .gpu-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .spec-label {
+            font-size: 0.8em;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        .spec-value {
+            font-size: 1em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .badges {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .badge.verified {
+            background: #4caf50;
+            color: white;
+        }
+
+        .badge.location {
+            background: #2196f3;
+            color: white;
+        }
+
+        .badge.reliability {
+            background: #ff9800;
+            color: white;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            background: white;
+            border-radius: 15px;
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .refresh-info {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-button:hover {
+            background: #e0e0e0;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .instances-table {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .instances-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .instances-table th,
+        .instances-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .instances-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+            color: #667eea;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .instances-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-badge.running {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-badge.stopped {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-badge.starting {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-badge.unknown {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .instance-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .instance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .instance-card.ready {
+            border-left-color: #4caf50;
+        }
+
+        .instance-card.not-ready {
+            border-left-color: #ff9800;
+        }
+
+        .instance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .instance-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .instance-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            font-size: 0.8em;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .info-value {
+            font-size: 1em;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .instance-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .auto-refresh-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes pulseBtn {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(255, 107, 53, 0.3); }
+        }
+
+        .btn-lote {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            animation: pulseBtn 2s infinite;
+        }
+
+        .btn-lote:hover {
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.5);
+        }
+
+        .lote-progress {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .lote-progress-bar {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        .lote-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .lote-stat {
+            text-align: center;
+        }
+
+        .lote-stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .lote-stat-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .ip-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #667eea;
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .ip-copy:hover {
+            background: #e0e0e0;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+            margin: 0;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .result-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .result-item.success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .result-item.error {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+
+        .result-item .ip-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Vast.ai Dashboard</h1>
+            <p>Máquinas GPU Disponíveis - Encontre as melhores ofertas</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="mudarAba('buscar')">🔍 Buscar Máquinas</button>
+            <button class="tab-button" onclick="mudarAba('minhas-maquinas')">🖥️ Minhas Máquinas</button>
+        </div>
+
+        <div id="tab-buscar" class="tab-content active">
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <h3>Total de Máquinas</h3>
+                <div class="value" id="totalMachines">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Preço Mínimo</h3>
+                <div class="value" id="precoMinimo">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Preço Médio</h3>
+                <div class="value" id="precoMedio">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total de GPUs</h3>
+                <div class="value" id="totalGpus">-</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <h2>🔍 Filtros</h2>
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label>Preço Máximo (USD/hora)</label>
+                    <input type="number" id="precoMax" step="0.01" min="0" max="10" placeholder="10.00" value="10.00">
+                </div>
+                <div class="filter-item">
+                    <label>Apenas Verificadas</label>
+                    <select id="verificadas">
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Limite de Resultados</label>
+                    <input type="number" id="limite" min="1" max="5000" value="50">
+                    <small style="color: #999; font-size: 0.8em;">Recomendado: 50-100</small>
+                </div>
+                <div class="filter-item">
+                    <label>🌍 País (Filtro Específico)</label>
+                    <select id="paisFiltro" style="min-width: 200px;" onfocus="carregarPaisesSeNecessario()">
+                        <option value="">Todos os países (clique para carregar)</option>
+                    </select>
+                </div>
+                <div class="filter-item" style="align-self: flex-end;">
+                    <button class="btn" onclick="buscarOfertas()">🔍 Buscar</button>
+                </div>
+            </div>
+            <div class="filter-group" style="margin-top: 15px;">
+                <div class="filter-item" style="flex-direction: row; align-items: center; gap: 10px;">
+                    <label style="font-weight: bold; margin-right: 10px;">🌍 Regiões:</label>
+                    <label style="flex-direction: row; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="regiao_europa" value="europa" checked>
+                        <span>🇪🇺 Europa</span>
+                    </label>
+                    <label style="flex-direction: row; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="regiao_america_sul" value="america_sul" checked>
+                        <span>🇧🇷 América do Sul</span>
+                    </label>
+                    <label style="flex-direction: row; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="regiao_america_norte" value="america_norte" checked>
+                        <span>🇺🇸 América do Norte</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="actionBar" class="action-bar" style="display: none;">
+            <div class="selected-count">
+                <span id="selectedCount">0</span> máquina(s) selecionada(s)
+            </div>
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="selecionarTodas()">✓ Selecionar Todas</button>
+                <button class="btn-secondary" onclick="deselecionarTodas()">✗ Desmarcar Todas</button>
+                <button class="btn" onclick="comprarSelecionadas()">💰 Comprar Selecionadas</button>
+                <button class="btn" onclick="comprarEmLote()" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); animation: pulseBtn 2s infinite;">⚡ COMPRA RÁPIDA EM LOTE</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div style="background: white; border-radius: 15px; padding: 30px; color: #333; max-width: 400px; margin: 0 auto;">
+                <div style="font-size: 3em; margin-bottom: 15px;">⏳</div>
+                <p style="font-size: 1.2em; margin-bottom: 10px;">🔄 Carregando máquinas...</p>
+                <p style="color: #666; font-size: 0.9em;">Buscando até <span id="limiteCarregando">500</span> máquinas na API</p>
+            </div>
+        </div>
+
+        <div id="machinesContainer" class="machines-grid"></div>
+
+        <div class="refresh-info">
+            <p>Última atualização: <span id="lastUpdate">-</span></p>
+        </div>
+        </div>
+
+        <div id="tab-minhas-maquinas" class="tab-content">
+            <div class="instances-table">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="color: #667eea; margin: 0;">
+                        🖥️ Minhas Máquinas Compradas
+                        <span class="auto-refresh-indicator" title="Atualização automática a cada 10 segundos"></span>
+                    </h2>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-secondary" onclick="exportarListaIPs()">📋 Lista de IPs</button>
+                        <button class="btn-secondary" onclick="exportarListaPorta3000()">🚀 Lista Porta 3000</button>
+                        <button class="btn-secondary" onclick="exportarListaPorta22()">🔌 Lista Porta 22 (SSH)</button>
+                        <button class="btn" onclick="atualizarMinhasMaquinas()">🔄 Atualizar Agora</button>
+                        <button class="btn" onclick="destruirTodasInstancias()" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);">🗑️ Destruir Todas</button>
+                    </div>
+                </div>
+                <div id="instancesContainer">
+                    <p style="text-align: center; padding: 50px; color: #666;">🔄 Carregando suas máquinas...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Resultados -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📦 Resultados da Compra</h2>
+                <span class="close" onclick="fecharModal()">&times;</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // CONFIGURAÇÃO DE PAGINAÇÃO - Evita travamento
+        // =============================================
+        const ITENS_POR_PAGINA = 50;  // Mostra 50 máquinas por vez
+        let todasOfertas = [];         // Armazena todas as ofertas carregadas
+        let ofertasExibidas = 0;       // Quantas ofertas já foram exibidas
+        let carregandoMais = false;    // Flag para evitar múltiplos cliques
+
+        function formatarPreco(preco) {
+            return `$${preco.toFixed(4)}`;
+        }
+
+        function formatarVelocidade(mbps) {
+            if (mbps >= 1000) {
+                return `${(mbps / 1000).toFixed(2)} Gbps`;
+            }
+            return `${mbps.toFixed(2)} Mbps`;
+        }
+
+        function criarCardMaquina(oferta) {
+            return `
+                <div class="machine-card" data-machine-id="${oferta.id}">
+                    <input type="checkbox" class="machine-checkbox" value="${oferta.id}" onchange="atualizarContador()">
+                    <div class="machine-header">
+                        <div class="machine-id">ID: ${oferta.id}</div>
+                        <div class="price">${oferta.preco_formatado}/h</div>
+                    </div>
+                    <div class="gpu-info">
+                        <div class="gpu-name">${oferta.gpu_name}</div>
+                        <div style="color: #666; font-size: 0.9em;">${oferta.gpu_ram} VRAM</div>
+                    </div>
+                    <div class="specs">
+                        <div class="spec-item">
+                            <div class="spec-label">CPU</div>
+                            <div class="spec-value">${oferta.cpu_name}</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Cores</div>
+                            <div class="spec-value">${oferta.cpu_cores}</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">RAM</div>
+                            <div class="spec-value">${oferta.cpu_ram}</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Disco</div>
+                            <div class="spec-value">${oferta.disk_space}</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Upload</div>
+                            <div class="spec-value">${formatarVelocidade(oferta.inet_up)}</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Download</div>
+                            <div class="spec-value">${formatarVelocidade(oferta.inet_down)}</div>
+                        </div>
+                    </div>
+                    <div class="badges">
+                        ${oferta.verificado ? '<span class="badge verified">✓ Verificado</span>' : ''}
+                        <span class="badge location">📍 ${oferta.localizacao}</span>
+                        <span class="badge reliability">⚡ ${oferta.reliability.toFixed(1)}%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        let paisesCarregados = false;
+        
+        async function carregarPaisesSeNecessario() {
+            if (paisesCarregados) return;
+            paisesCarregados = true;
+            
+            const select = document.getElementById('paisFiltro');
+            select.innerHTML = '<option value="">Carregando países...</option>';
+            
+            try {
+                const response = await fetch('/api/paises?limite=500');
+                const data = await response.json();
+                
+                if (data.success && data.paises) {
+                    select.innerHTML = '<option value="">Todos os países</option>';
+                    
+                    data.paises.forEach(pais => {
+                        const option = document.createElement('option');
+                        option.value = pais;
+                        option.textContent = pais;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Erro ao carregar</option>';
+                    paisesCarregados = false;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar países:', error);
+                select.innerHTML = '<option value="">Erro ao carregar</option>';
+                paisesCarregados = false;
+            }
+        }
+        
+        async function carregarPaises() {
+            return carregarPaisesSeNecessario();
+        }
+
+        async function buscarOfertas() {
+            const precoMax = document.getElementById('precoMax').value;
+            const verificadas = document.getElementById('verificadas').value;
+            const limite = document.getElementById('limite').value;
+            
+            // Obter país selecionado
+            const paisSelecionado = document.getElementById('paisFiltro').value;
+            
+            // Obter regiões selecionadas (só se não tiver país específico)
+            const regioesSelecionadas = [];
+            if (!paisSelecionado) {
+                if (document.getElementById('regiao_europa').checked) {
+                    regioesSelecionadas.push('europa');
+                }
+                if (document.getElementById('regiao_america_sul').checked) {
+                    regioesSelecionadas.push('america_sul');
+                }
+                if (document.getElementById('regiao_america_norte').checked) {
+                    regioesSelecionadas.push('america_norte');
+                }
+            }
+
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('machinesContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+            
+            // Atualiza indicador de carregamento
+            const limiteIndicador = document.getElementById('limiteCarregando');
+            if (limiteIndicador) limiteIndicador.textContent = limite;
+            
+            // Reset paginação
+            todasOfertas = [];
+            ofertasExibidas = 0;
+            removerBotaoCarregarMais();
+
+            try {
+                const params = new URLSearchParams({
+                    preco_max: precoMax || '',
+                    verificadas: verificadas,
+                    limite: limite
+                });
+                
+                // Adicionar país se selecionado (prioridade sobre regiões)
+                if (paisSelecionado) {
+                    params.append('paises', paisSelecionado);
+                }
+                // Adicionar regiões se alguma estiver selecionada e não tiver país específico
+                else if (regioesSelecionadas.length > 0) {
+                    params.append('regioes', regioesSelecionadas.join(','));
+                }
+
+                const response = await fetch(`/api/ofertas?${params}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.ofertas.length === 0) {
+                        container.innerHTML = '<div class="no-results">❌ Nenhuma máquina encontrada com os critérios especificados.</div>';
+                        document.getElementById('actionBar').style.display = 'none';
+                    } else {
+                        // Armazena todas as ofertas
+                        todasOfertas = data.ofertas;
+                        
+                        // Renderiza apenas as primeiras ITENS_POR_PAGINA
+                        renderizarProximasOfertas();
+                        
+                        deselecionarTodas(); // Reset seleção
+                    }
+                    document.getElementById('lastUpdate').textContent = new Date(data.timestamp).toLocaleString('pt-BR');
+                } else {
+                    container.innerHTML = `<div class="no-results">❌ Erro: ${data.error}</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="no-results">❌ Erro ao buscar ofertas: ${error.message}</div>`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // =============================================
+        // FUNÇÃO DE PAGINAÇÃO - Renderiza em lotes
+        // =============================================
+        function renderizarProximasOfertas() {
+            if (carregandoMais) return;
+            carregandoMais = true;
+            
+            const container = document.getElementById('machinesContainer');
+            const inicio = ofertasExibidas;
+            const fim = Math.min(ofertasExibidas + ITENS_POR_PAGINA, todasOfertas.length);
+            
+            // Usa DocumentFragment para performance
+            const fragment = document.createDocumentFragment();
+            const tempDiv = document.createElement('div');
+            
+            for (let i = inicio; i < fim; i++) {
+                tempDiv.innerHTML = criarCardMaquina(todasOfertas[i]);
+                fragment.appendChild(tempDiv.firstElementChild);
+            }
+            
+            container.appendChild(fragment);
+            ofertasExibidas = fim;
+            
+            // Mostra ou atualiza botão "Carregar mais"
+            atualizarBotaoCarregarMais();
+            
+            carregandoMais = false;
+        }
+        
+        function atualizarBotaoCarregarMais() {
+            removerBotaoCarregarMais();
+            
+            const restantes = todasOfertas.length - ofertasExibidas;
+            
+            if (restantes > 0) {
+                const container = document.getElementById('machinesContainer');
+                const btnContainer = document.createElement('div');
+                btnContainer.id = 'loadMoreContainer';
+                btnContainer.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 30px;';
+                btnContainer.innerHTML = `
+                    <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <p style="margin-bottom: 15px; color: #666;">
+                            Exibindo <strong>${ofertasExibidas}</strong> de <strong>${todasOfertas.length}</strong> máquinas
+                        </p>
+                        <button class="btn" onclick="renderizarProximasOfertas()" style="font-size: 1.1em; padding: 15px 40px;">
+                            ⬇️ Carregar mais ${Math.min(ITENS_POR_PAGINA, restantes)} máquinas
+                        </button>
+                        <p style="margin-top: 10px; color: #999; font-size: 0.9em;">
+                            (${restantes} restantes)
+                        </p>
+                    </div>
+                `;
+                container.appendChild(btnContainer);
+            } else if (todasOfertas.length > ITENS_POR_PAGINA) {
+                // Todas carregadas
+                const container = document.getElementById('machinesContainer');
+                const infoContainer = document.createElement('div');
+                infoContainer.id = 'loadMoreContainer';
+                infoContainer.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 20px;';
+                infoContainer.innerHTML = `
+                    <div style="background: #d4edda; border-radius: 15px; padding: 15px; color: #155724;">
+                        ✅ Todas as ${todasOfertas.length} máquinas foram carregadas!
+                    </div>
+                `;
+                container.appendChild(infoContainer);
+            }
+        }
+        
+        function removerBotaoCarregarMais() {
+            const existingBtn = document.getElementById('loadMoreContainer');
+            if (existingBtn) {
+                existingBtn.remove();
+            }
+        }
+
+        async function atualizarEstatisticas() {
+            try {
+                // Obter regiões selecionadas
+                const regioesSelecionadas = [];
+                if (document.getElementById('regiao_europa') && document.getElementById('regiao_europa').checked) {
+                    regioesSelecionadas.push('europa');
+                }
+                if (document.getElementById('regiao_america_sul') && document.getElementById('regiao_america_sul').checked) {
+                    regioesSelecionadas.push('america_sul');
+                }
+                if (document.getElementById('regiao_america_norte') && document.getElementById('regiao_america_norte').checked) {
+                    regioesSelecionadas.push('america_norte');
+                }
+                
+                let url = '/api/estatisticas';
+                if (regioesSelecionadas.length > 0) {
+                    url += `?regioes=${regioesSelecionadas.join(',')}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('totalMachines').textContent = data.total;
+                    document.getElementById('precoMinimo').textContent = formatarPreco(data.preco_minimo);
+                    document.getElementById('precoMedio').textContent = formatarPreco(data.preco_medio);
+                    document.getElementById('totalGpus').textContent = data.total_gpus;
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
+            }
+        }
+
+        function atualizarContador() {
+            const checkboxes = document.querySelectorAll('.machine-checkbox:checked');
+            const count = checkboxes.length;
+            document.getElementById('selectedCount').textContent = count;
+            
+            const actionBar = document.getElementById('actionBar');
+            if (count > 0) {
+                actionBar.style.display = 'flex';
+            } else {
+                actionBar.style.display = 'none';
+            }
+
+            // Atualizar visual dos cards selecionados
+            checkboxes.forEach(checkbox => {
+                const card = checkbox.closest('.machine-card');
+                card.classList.add('selected');
+            });
+
+            document.querySelectorAll('.machine-checkbox:not(:checked)').forEach(checkbox => {
+                const card = checkbox.closest('.machine-card');
+                card.classList.remove('selected');
+            });
+        }
+
+        function selecionarTodas() {
+            // Se ainda há ofertas não renderizadas, pergunta se quer carregar todas
+            if (ofertasExibidas < todasOfertas.length) {
+                const restantes = todasOfertas.length - ofertasExibidas;
+                const confirmar = confirm(
+                    `Há ${restantes} máquinas ainda não carregadas na tela.\n\n` +
+                    `Deseja carregar TODAS as ${todasOfertas.length} máquinas para selecionar?\n\n` +
+                    `(Isso pode demorar um pouco se houver muitas máquinas)`
+                );
+                
+                if (confirmar) {
+                    // Carrega todas de uma vez
+                    carregarTodasOfertas();
+                }
+            }
+            
+            // Seleciona todas as que estão visíveis
+            document.querySelectorAll('.machine-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            atualizarContador();
+        }
+        
+        function carregarTodasOfertas() {
+            const container = document.getElementById('machinesContainer');
+            removerBotaoCarregarMais();
+            
+            // Renderiza as restantes em lotes para não travar
+            const batchSize = 100;
+            let i = ofertasExibidas;
+            
+            function renderBatch() {
+                const fragment = document.createDocumentFragment();
+                const tempDiv = document.createElement('div');
+                const fim = Math.min(i + batchSize, todasOfertas.length);
+                
+                for (; i < fim; i++) {
+                    tempDiv.innerHTML = criarCardMaquina(todasOfertas[i]);
+                    fragment.appendChild(tempDiv.firstElementChild);
+                }
+                
+                container.appendChild(fragment);
+                ofertasExibidas = i;
+                
+                if (i < todasOfertas.length) {
+                    // Continua no próximo frame para não travar UI
+                    requestAnimationFrame(renderBatch);
+                } else {
+                    // Finalizado - seleciona todas
+                    document.querySelectorAll('.machine-checkbox').forEach(cb => {
+                        cb.checked = true;
+                    });
+                    atualizarContador();
+                    atualizarBotaoCarregarMais();
+                }
+            }
+            
+            renderBatch();
+        }
+
+        function deselecionarTodas() {
+            document.querySelectorAll('.machine-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            atualizarContador();
+        }
+
+        async function comprarSelecionadas() {
+            console.log('Função comprarSelecionadas chamada');
+            
+            const checkboxes = document.querySelectorAll('.machine-checkbox:checked');
+            console.log('Checkboxes selecionadas:', checkboxes.length);
+            
+            const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            console.log('IDs selecionados:', ids);
+
+            if (ids.length === 0) {
+                alert('Por favor, selecione pelo menos uma máquina!');
+                return;
+            }
+
+            // Usa a imagem Docker do Browserless por padrão
+            // O template 39577 usa ghcr.io/browserless/chrome:latest
+            let imagemFinal = 'ghcr.io/browserless/chrome:latest';
+            
+            // Opcional: perguntar se quer usar outra imagem
+            const usarOutra = confirm(
+                `Deseja comprar ${ids.length} máquina(s) com Browserless?\n\n` +
+                'OK = Usar Browserless (ghcr.io/browserless/chrome:latest)\n' +
+                'Cancelar = Escolher outra imagem'
+            );
+            
+            if (!usarOutra) {
+                // Se escolheu Cancelar, pergunta qual imagem usar
+                const imagemDocker = prompt(
+                    'Digite a Imagem Docker:\n\n' +
+                    'Exemplos:\n' +
+                    '- ghcr.io/browserless/chrome:latest (Browserless - padrão)\n' +
+                    '- browserless/chrome:latest\n' +
+                    '- python:3.11\n' +
+                    '- ubuntu:22.04\n' +
+                    '- pytorch/pytorch:latest\n\n' +
+                    'Ou deixe em branco para usar Browserless',
+                    'browserless/chrome:latest'
+                );
+                
+                if (imagemDocker === null) {
+                    return; // Usuário cancelou
+                }
+                
+                imagemFinal = imagemDocker.trim() || 'ghcr.io/browserless/chrome:latest';
+            }
+            
+            console.log('Imagem selecionada:', imagemFinal);
+
+            const modal = document.getElementById('resultModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            if (!modal || !modalBody) {
+                alert('Erro: Modal não encontrado!');
+                console.error('Modal ou modalBody não encontrado');
+                return;
+            }
+            
+            modal.style.display = 'block';
+            modalBody.innerHTML = '<p>🔄 Processando compra...</p>';
+
+            try {
+                console.log('Enviando requisição para /api/comprar com:', { ids, image: imagemFinal });
+                
+                const response = await fetch('/api/comprar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        ids: ids,
+                        image: imagemFinal
+                    })
+                });
+
+                console.log('Resposta recebida:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Dados recebidos:', data);
+
+                if (data.success) {
+                    let html = '<h3>Resultados:</h3>';
+                    
+                    data.resultados.forEach(result => {
+                        if (result.success) {
+                            html += `
+                                <div class="result-item success">
+                                    <strong>✅ Máquina ID: ${result.id}</strong>
+                                    <p>${result.message}</p>
+                                    ${result.ip && result.ip !== 'N/A' && result.ip !== 'Aguardando atribuição' ? `
+                                        <div class="ip-display">
+                                            🌐 IP da Máquina: ${result.ip}
+                                        </div>
+                                    ` : result.ip === 'Aguardando atribuição' ? `
+                                        <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px; color: #856404;">
+                                            ⏳ ${result.ip}
+                                        </div>
+                                    ` : ''}
+                                    ${result.instance_id && result.instance_id !== 'N/A' ? `<p><small>Instance ID: ${result.instance_id}</small></p>` : ''}
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div class="result-item error">
+                                    <strong>❌ Máquina ID: ${result.id}</strong>
+                                    <p>${result.message}</p>
+                                    ${result.response_text ? `<pre style="margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 5px; font-size: 0.8em; overflow-x: auto;">${result.response_text}</pre>` : ''}
+                                </div>
+                            `;
+                        }
+                    });
+
+                    modalBody.innerHTML = html;
+
+                    // Atualiza a lista de máquinas se estiver na aba correta
+                    if (document.getElementById('tab-minhas-maquinas').classList.contains('active')) {
+                        setTimeout(() => {
+                            atualizarMinhasMaquinas();
+                        }, 3000);
+                    }
+
+                    // Deselecionar todas após compra bem-sucedida
+                    setTimeout(() => {
+                        deselecionarTodas();
+                    }, 2000);
+                } else {
+                    modalBody.innerHTML = `<div class="result-item error"><strong>❌ Erro:</strong> ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Erro ao comprar:', error);
+                const errorMsg = error.message || 'Erro desconhecido';
+                modalBody.innerHTML = `<div class="result-item error"><strong>❌ Erro:</strong> ${errorMsg}</div>`;
+            }
+        }
+
+        async function comprarEmLote() {
+            console.log('🚀 Função comprarEmLote chamada - COMPRA RÁPIDA EM PARALELO');
+            
+            const checkboxes = document.querySelectorAll('.machine-checkbox:checked');
+            const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            if (ids.length === 0) {
+                alert('⚠️ Por favor, selecione pelo menos uma máquina!');
+                return;
+            }
+
+            // Confirmação rápida
+            const confirmar = confirm(
+                `⚡ COMPRA RÁPIDA EM LOTE\n\n` +
+                `Você vai comprar ${ids.length} máquina(s) em PARALELO!\n\n` +
+                `Isso é muito mais rápido que a compra normal.\n\n` +
+                `Imagem: ghcr.io/browserless/chrome:latest\n\n` +
+                `Deseja continuar?`
+            );
+            
+            if (!confirmar) {
+                return;
+            }
+
+            const modal = document.getElementById('resultModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            modal.style.display = 'block';
+            modalBody.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3em; margin-bottom: 20px;">⚡</div>
+                    <h3 style="color: #ff6b35; margin-bottom: 15px;">COMPRA EM LOTE EM ANDAMENTO</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Processando ${ids.length} máquinas em PARALELO...</p>
+                    <div class="lote-progress">
+                        <div class="lote-progress-bar" style="width: 0%;" id="loteProgressBar">0%</div>
+                    </div>
+                    <p style="color: #999; font-size: 0.9em;">Aguarde, isso pode levar alguns segundos...</p>
+                </div>
+            `;
+            
+            // Simula progresso enquanto espera
+            let progresso = 0;
+            const progressInterval = setInterval(() => {
+                if (progresso < 90) {
+                    progresso += Math.random() * 15;
+                    if (progresso > 90) progresso = 90;
+                    const bar = document.getElementById('loteProgressBar');
+                    if (bar) {
+                        bar.style.width = `${progresso}%`;
+                        bar.textContent = `${Math.round(progresso)}%`;
+                    }
+                }
+            }, 300);
+
+            try {
+                const inicio = performance.now();
+                
+                const response = await fetch('/api/comprar-lote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        ids: ids,
+                        image: 'ghcr.io/browserless/chrome:latest'
+                    })
+                });
+
+                clearInterval(progressInterval);
+                const bar = document.getElementById('loteProgressBar');
+                if (bar) {
+                    bar.style.width = '100%';
+                    bar.textContent = '100%';
+                }
+
+                const data = await response.json();
+                const tempoCliente = ((performance.now() - inicio) / 1000).toFixed(2);
+
+                if (data.success) {
+                    const sucessos = data.sucessos || 0;
+                    const falhas = data.falhas || 0;
+                    const tempoServidor = data.tempo_total ? data.tempo_total.toFixed(2) : tempoCliente;
+                    
+                    let html = `
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 3em; margin-bottom: 10px;">${falhas === 0 ? '🎉' : '⚠️'}</div>
+                            <h3 style="color: ${falhas === 0 ? '#4caf50' : '#ff9800'};">COMPRA EM LOTE ${falhas === 0 ? 'CONCLUÍDA' : 'FINALIZADA COM ERROS'}</h3>
+                        </div>
+                        
+                        <div class="lote-stats">
+                            <div class="lote-stat">
+                                <div class="lote-stat-value" style="color: #4caf50;">✅ ${sucessos}</div>
+                                <div class="lote-stat-label">Sucessos</div>
+                            </div>
+                            <div class="lote-stat">
+                                <div class="lote-stat-value" style="color: #f44336;">❌ ${falhas}</div>
+                                <div class="lote-stat-label">Falhas</div>
+                            </div>
+                            <div class="lote-stat">
+                                <div class="lote-stat-value" style="color: #2196f3;">⚡ ${tempoServidor}s</div>
+                                <div class="lote-stat-label">Tempo Total</div>
+                            </div>
+                        </div>
+                        
+                        <h4 style="margin: 15px 0;">Detalhes por máquina:</h4>
+                    `;
+                    
+                    data.resultados.forEach(result => {
+                        if (result.success) {
+                            html += `
+                                <div class="result-item success">
+                                    <strong>✅ Máquina ID: ${result.id}</strong>
+                                    <p>${result.message}</p>
+                                    ${result.instance_id && result.instance_id !== 'N/A' ? `<p><small>Instance ID: ${result.instance_id}</small></p>` : ''}
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div class="result-item error">
+                                    <strong>❌ Máquina ID: ${result.id}</strong>
+                                    <p>${result.message}</p>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    html += `
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button class="btn" onclick="mudarAba('minhas-maquinas'); fecharModal();">
+                                🖥️ Ver Minhas Máquinas
+                            </button>
+                        </div>
+                    `;
+
+                    modalBody.innerHTML = html;
+
+                    // Deselecionar após compra
+                    setTimeout(() => {
+                        deselecionarTodas();
+                    }, 1000);
+                    
+                } else {
+                    modalBody.innerHTML = `
+                        <div class="result-item error">
+                            <strong>❌ Erro na compra em lote:</strong> ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                clearInterval(progressInterval);
+                console.error('Erro na compra em lote:', error);
+                modalBody.innerHTML = `
+                    <div class="result-item error">
+                        <strong>❌ Erro:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('resultModal');
+            if (event.target == modal) {
+                fecharModal();
+            }
+        }
+
+        function mudarAba(aba) {
+            // Remove active de todas as abas
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Ativa a aba selecionada
+            if (aba === 'buscar') {
+                document.querySelector('.tab-button[onclick="mudarAba(\'buscar\')"]').classList.add('active');
+                document.getElementById('tab-buscar').classList.add('active');
+            } else if (aba === 'minhas-maquinas') {
+                document.querySelector('.tab-button[onclick="mudarAba(\'minhas-maquinas\')"]').classList.add('active');
+                document.getElementById('tab-minhas-maquinas').classList.add('active');
+                atualizarMinhasMaquinas();
+            }
+        }
+
+        function copiarIP(ip) {
+            navigator.clipboard.writeText(ip).then(() => {
+                alert(`IP copiado: ${ip}`);
+            }).catch(err => {
+                console.error('Erro ao copiar IP:', err);
+                // Fallback para navegadores antigos
+                const textarea = document.createElement('textarea');
+                textarea.value = ip;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert(`IP copiado: ${ip}`);
+            });
+        }
+
+        function formatarStatus(status) {
+            const statusLower = (status || '').toLowerCase();
+            if (statusLower.includes('running') || statusLower === 'started') {
+                return { text: '🟢 Running', class: 'running', ready: true };
+            } else if (statusLower.includes('starting') || statusLower.includes('init')) {
+                return { text: '🟡 Starting', class: 'starting', ready: false };
+            } else if (statusLower.includes('stopped') || statusLower === 'stopped') {
+                return { text: '🔴 Stopped', class: 'stopped', ready: false };
+            } else {
+                return { text: `⚪ ${status || 'Unknown'}`, class: 'unknown', ready: false };
+            }
+        }
+
+        async function atualizarMinhasMaquinas() {
+            const container = document.getElementById('instancesContainer');
+            container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">🔄 Carregando...</p>';
+
+            try {
+                const response = await fetch('/api/instancias');
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.instancias.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; padding: 50px; color: #666;">Você ainda não tem máquinas compradas.</p>';
+                    } else {
+                        let html = '';
+                        
+                        data.instancias.forEach(inst => {
+                            const statusInfo = formatarStatus(inst.status);
+                            const isReady = inst.is_ready || statusInfo.ready;
+                            const cardClass = isReady ? 'ready' : 'not-ready';
+                            
+                            html += `
+                                <div class="instance-card ${cardClass}">
+                                    <div class="instance-header">
+                                        <div>
+                                            <div class="instance-title">
+                                                Instância #${inst.id}
+                                                ${inst.label ? `<span style="font-size: 0.8em; color: #666; font-weight: normal;"> - ${inst.label}</span>` : ''}
+                                            </div>
+                                            <div style="margin-top: 5px;">
+                                                <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
+                                                ${inst.status_msg ? `<span style="margin-left: 10px; font-size: 0.9em; color: #666;">${inst.status_msg}</span>` : ''}
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 0.9em; color: #666;">$${inst.dph_total && typeof inst.dph_total === 'number' ? inst.dph_total.toFixed(4) : '0.0000'}/h</div>
+                                            ${inst.time_remaining && inst.time_remaining !== 'N/A' ? `<div style="font-size: 0.8em; color: #999; margin-top: 5px;">⏱️ ${inst.time_remaining}</div>` : ''}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="instance-info-grid">
+                                        <div class="info-item">
+                                            <div class="info-label">🌐 IP Público</div>
+                                            <div class="info-value">
+                                                <div class="ip-copy" onclick="copiarIP('${inst.ip}')" style="display: inline-flex; align-items: center; gap: 10px;">
+                                                    ${inst.ip}
+                                                    <button class="copy-btn" onclick="event.stopPropagation(); copiarIP('${inst.ip}')">📋</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">🎮 GPU</div>
+                                            <div class="info-value">${inst.gpu_name || 'N/A'} ${inst.gpu_ram && typeof inst.gpu_ram === 'number' ? `(${(inst.gpu_ram/1024).toFixed(1)} GB VRAM)` : ''}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">💻 CPU</div>
+                                            <div class="info-value">${inst.cpu_name || 'N/A'} ${inst.cpu_cores && typeof inst.cpu_cores === 'number' ? `(${inst.cpu_cores} cores)` : ''}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">💾 RAM</div>
+                                            <div class="info-value">${inst.cpu_ram && typeof inst.cpu_ram === 'number' ? `${(inst.cpu_ram/1024).toFixed(1)} GB` : 'N/A'}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">💿 Disco</div>
+                                            <div class="info-value">${inst.disk_space && typeof inst.disk_space === 'number' ? `${inst.disk_space.toFixed(1)} GB` : 'N/A'}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">🔌 SSH</div>
+                                            <div class="info-value">
+                                                ${inst.ssh_host && inst.ssh_host !== 'Aguardando atribuição' ? `
+                                                    <div style="font-family: monospace; font-size: 0.9em;">
+                                                        ${inst.ssh_host}:${inst.ssh_port}
+                                                    </div>
+                                                ` : 'Aguardando...'}
+                                            </div>
+                                        </div>
+                                        
+                                        ${inst.port_3000 ? `
+                                        <div class="info-item" style="background: #e8f5e9; padding: 10px; border-radius: 8px; border: 2px solid #4caf50;">
+                                            <div class="info-label" style="color: #2e7d32; font-weight: bold;">🚀 Porta 3000 (Sistema)</div>
+                                            <div class="info-value" style="font-family: monospace; font-size: 1.1em; color: #1b5e20; font-weight: bold;">
+                                                ${inst.ip}:${inst.port_3000}
+                                                <button class="copy-btn" onclick="copiarIP('${inst.ip}:${inst.port_3000}')" style="margin-left: 10px; background: #4caf50;">📋</button>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${inst.outras_portas && inst.outras_portas.length > 0 ? `
+                                        <div class="info-item">
+                                            <div class="info-label">🔌 Outras Portas</div>
+                                            <div class="info-value" style="font-size: 0.9em;">
+                                                ${inst.outras_portas.map(p => `
+                                                    <div style="margin: 3px 0; font-family: monospace;">
+                                                        ${p.porta}/${p.protocolo}: ${inst.ip}:${p.host_port}
+                                                        <button class="copy-btn" onclick="copiarIP('${inst.ip}:${p.host_port}')" style="margin-left: 5px; padding: 2px 6px; font-size: 0.8em;">📋</button>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">📦 Template</div>
+                                            <div class="info-value">${inst.template_name || 'N/A'}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">🐳 Imagem Docker</div>
+                                            <div class="info-value" style="font-size: 0.85em; word-break: break-all;">${inst.image_uuid || 'N/A'}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">📍 Localização</div>
+                                            <div class="info-value">${inst.geolocation || 'N/A'}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">✅ Verificação</div>
+                                            <div class="info-value">${inst.verification || 'N/A'}</div>
+                                        </div>
+                                        
+                                        <div class="info-item">
+                                            <div class="info-label">📅 Iniciada em</div>
+                                            <div class="info-value">${inst.start_date || 'N/A'}</div>
+                                        </div>
+                                        
+                                        ${inst.gpu_util !== undefined && inst.gpu_util !== null && typeof inst.gpu_util === 'number' ? `
+                                        <div class="info-item">
+                                            <div class="info-label">⚡ GPU Utilização</div>
+                                            <div class="info-value">${inst.gpu_util.toFixed(1)}%</div>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${inst.cpu_util !== undefined && inst.cpu_util !== null && typeof inst.cpu_util === 'number' ? `
+                                        <div class="info-item">
+                                            <div class="info-label">⚡ CPU Utilização</div>
+                                            <div class="info-value">${inst.cpu_util.toFixed(1)}%</div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                    
+                                    <div class="instance-actions">
+                                        ${inst.port_3000 ? `
+                                            <button class="copy-btn" onclick="copiarIP('${inst.ip}:${inst.port_3000}')" style="background: #4caf50; font-weight: bold;">
+                                                🚀 Copiar Porta 3000 (${inst.ip}:${inst.port_3000})
+                                            </button>
+                                        ` : ''}
+                                        ${inst.ssh_host && inst.ssh_host !== 'Aguardando atribuição' ? `
+                                            <button class="copy-btn" onclick="copiarIP('ssh root@${inst.ssh_host} -p ${inst.ssh_port}')">
+                                                📋 Copiar Comando SSH
+                                            </button>
+                                        ` : ''}
+                                        ${inst.ip && inst.ip !== 'Aguardando atribuição' ? `
+                                            <button class="copy-btn" onclick="copiarIP('${inst.ip}')">
+                                                📋 Copiar IP
+                                            </button>
+                                        ` : ''}
+                                        ${inst.jupyter_token ? `
+                                            <button class="copy-btn" onclick="copiarIP('${inst.jupyter_token}')">
+                                                📋 Copiar Jupyter Token
+                                            </button>
+                                        ` : ''}
+                                        <button class="copy-btn" onclick="destruirInstancia(${inst.id}, '${inst.label || 'Instância #' + inst.id}')" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); font-weight: bold;">
+                                            🗑️ Destruir
+                                        </button>
+                                    </div>
+                                    
+                                    ${!isReady ? `
+                                        <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; color: #856404;">
+                                            ⏳ Aguardando máquina ficar pronta para uso...
+                                        </div>
+                                    ` : `
+                                        <div style="margin-top: 15px; padding: 10px; background: #d4edda; border-radius: 5px; color: #155724;">
+                                            ✅ Máquina pronta para uso!
+                                        </div>
+                                    `}
+                                </div>
+                            `;
+                        });
+                        
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<p style="text-align: center; padding: 50px; color: #f44336;">❌ Erro: ${data.error}</p>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<p style="text-align: center; padding: 50px; color: #f44336;">❌ Erro ao carregar máquinas: ${error.message}</p>`;
+            }
+        }
+
+        // =============================================
+        // INICIALIZAÇÃO OTIMIZADA - Não trava o navegador!
+        // =============================================
+        window.addEventListener('DOMContentLoaded', () => {
+            // NÃO carrega nada automaticamente para não travar
+            // Exibe mensagem amigável para o usuário clicar
+            const container = document.getElementById('machinesContainer');
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+                    <div style="background: white; border-radius: 15px; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <div style="font-size: 4em; margin-bottom: 20px;">🔍</div>
+                        <h2 style="color: #667eea; margin-bottom: 15px;">Pronto para Buscar!</h2>
+                        <p style="color: #666; margin-bottom: 25px; font-size: 1.1em;">
+                            Configure os filtros acima e clique em <strong>"Buscar"</strong> para carregar as máquinas.
+                        </p>
+                        <button class="btn" onclick="buscarOfertas()" style="font-size: 1.2em; padding: 15px 50px;">
+                            🚀 Iniciar Busca
+                        </button>
+                        <p style="color: #999; margin-top: 15px; font-size: 0.9em;">
+                            💡 Dica: Use um limite menor (50-100) para carregamento mais rápido
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Atualizar máquinas a cada 15 segundos APENAS quando na aba correta
+            setInterval(() => {
+                if (document.getElementById('tab-minhas-maquinas').classList.contains('active')) {
+                    atualizarMinhasMaquinas();
+                }
+            }, 15000);
+            
+            // Atualizar também quando a aba for aberta
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.textContent.includes('Minhas Máquinas')) {
+                        setTimeout(() => atualizarMinhasMaquinas(), 500);
+                    }
+                });
+            });
+        });
+
+        async function exportarListaIPs() {
+            try {
+                const response = await fetch('/api/instancias');
+                const data = await response.json();
+                
+                if (data.success && data.instancias) {
+                    // Coletar todos os IPs públicos válidos
+                    const ips = [];
+                    data.instancias.forEach(inst => {
+                        if (inst.ip && 
+                            inst.ip !== 'N/A' && 
+                            inst.ip !== 'Aguardando atribuição' &&
+                            inst.ip.trim() !== '') {
+                            ips.push(inst.ip);
+                        }
+                    });
+                    
+                    if (ips.length === 0) {
+                        alert('Nenhum IP público encontrado nas suas máquinas.');
+                        return;
+                    }
+                    
+                    // Criar texto com lista de IPs (um por linha)
+                    const listaIPs = ips.join('\n');
+                    
+                    // Exibir no modal
+                    mostrarListaModal('Lista de IPs Públicos', listaIPs, ips.length);
+                } else {
+                    alert('Erro ao buscar máquinas: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao exportar lista de IPs:', error);
+                alert('Erro ao exportar lista de IPs: ' + error.message);
+            }
+        }
+
+        async function exportarListaPorta3000() {
+            try {
+                const response = await fetch('/api/instancias');
+                const data = await response.json();
+                
+                if (data.success && data.instancias) {
+                    // Coletar todos os IPs com porta 3000
+                    const listaPorta3000 = [];
+                    data.instancias.forEach(inst => {
+                        if (inst.port_3000 && 
+                            inst.ip && 
+                            inst.ip !== 'N/A' && 
+                            inst.ip !== 'Aguardando atribuição' &&
+                            inst.ip.trim() !== '') {
+                            listaPorta3000.push(`${inst.ip}:${inst.port_3000}`);
+                        }
+                    });
+                    
+                    if (listaPorta3000.length === 0) {
+                        alert('Nenhuma máquina com porta 3000 encontrada.');
+                        return;
+                    }
+                    
+                    // Criar texto com lista de IP:porta (um por linha)
+                    const listaTexto = listaPorta3000.join('\n');
+                    
+                    // Exibir no modal
+                    mostrarListaModal('Lista de IPs com Porta 3000', listaTexto, listaPorta3000.length);
+                } else {
+                    alert('Erro ao buscar máquinas: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao exportar lista de porta 3000:', error);
+                alert('Erro ao exportar lista de porta 3000: ' + error.message);
+            }
+        }
+
+        async function exportarListaPorta22() {
+            try {
+                const response = await fetch('/api/instancias');
+                const data = await response.json();
+                
+                if (data.success && data.instancias) {
+                    // Coletar todos os IPs com porta 22 (SSH)
+                    const listaPorta22 = [];
+                    const ipsProcessados = new Set(); // Para evitar duplicatas
+                    
+                    data.instancias.forEach(inst => {
+                        if (inst.ip && 
+                            inst.ip !== 'N/A' && 
+                            inst.ip !== 'Aguardando atribuição' &&
+                            inst.ip.trim() !== '') {
+                            
+                            let porta22Encontrada = null;
+                            
+                            // Primeiro, verificar se tem porta 22 nas outras portas (mais confiável)
+                            if (inst.outras_portas && Array.isArray(inst.outras_portas)) {
+                                const porta22 = inst.outras_portas.find(p => p.porta === 22);
+                                if (porta22 && porta22.host_port) {
+                                    porta22Encontrada = porta22.host_port;
+                                }
+                            }
+                            
+                            // Se não encontrou nas outras portas, verificar ssh_port
+                            if (!porta22Encontrada && inst.ssh_port) {
+                                porta22Encontrada = inst.ssh_port;
+                            }
+                            
+                            // Se ainda não encontrou, usar porta padrão 22
+                            if (!porta22Encontrada) {
+                                porta22Encontrada = '22';
+                            }
+                            
+                            // Adicionar apenas se ainda não foi processado este IP
+                            const chave = `${inst.ip}:${porta22Encontrada}`;
+                            if (!ipsProcessados.has(chave)) {
+                                listaPorta22.push(chave);
+                                ipsProcessados.add(chave);
+                            }
+                        }
+                    });
+                    
+                    if (listaPorta22.length === 0) {
+                        alert('Nenhuma máquina com porta 22 (SSH) encontrada.');
+                        return;
+                    }
+                    
+                    // Criar texto com lista de IP:porta (um por linha)
+                    const listaTexto = listaPorta22.join('\n');
+                    
+                    // Exibir no modal
+                    mostrarListaModal('Lista de IPs com Porta 22 (SSH)', listaTexto, listaPorta22.length);
+                } else {
+                    alert('Erro ao buscar máquinas: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao exportar lista de porta 22:', error);
+                alert('Erro ao exportar lista de porta 22: ' + error.message);
+            }
+        }
+
+        function mostrarListaModal(titulo, conteudo, total) {
+            const modal = document.getElementById('resultModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            if (!modal || !modalBody) {
+                // Se não tiver modal, criar um temporário
+                const texto = `${titulo}\n\nTotal: ${total}\n\n${conteudo}`;
+                copiarParaClipboard(texto);
+                alert(`${titulo}\n\nTotal: ${total}\n\nLista copiada para a área de transferência!`);
+                return;
+            }
+            
+            // Criar HTML do modal
+            let html = `
+                <h3 style="color: #667eea; margin-bottom: 15px;">${titulo}</h3>
+                <div style="margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 8px;">
+                    <strong>Total encontrado:</strong> ${total}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Lista (um por linha):</label>
+                    <textarea 
+                        id="listaTexto" 
+                        readonly 
+                        style="width: 100%; min-height: 200px; padding: 10px; border: 2px solid #667eea; border-radius: 8px; font-family: monospace; font-size: 0.9em; resize: vertical;"
+                    >${conteudo}</textarea>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn" onclick="copiarListaTexto()" style="flex: 1;">
+                        📋 Copiar Lista
+                    </button>
+                    <button class="btn-secondary" onclick="fecharModal()" style="flex: 1;">
+                        Fechar
+                    </button>
+                </div>
+            `;
+            
+            modalBody.innerHTML = html;
+            modal.style.display = 'block';
+            
+            // Selecionar todo o texto automaticamente
+            setTimeout(() => {
+                const textarea = document.getElementById('listaTexto');
+                if (textarea) {
+                    textarea.select();
+                }
+            }, 100);
+        }
+
+        function copiarListaTexto() {
+            const textarea = document.getElementById('listaTexto');
+            if (textarea) {
+                const texto = textarea.value;
+                copiarParaClipboard(texto);
+            }
+        }
+
+        function copiarParaClipboard(texto) {
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('✅ Lista copiada para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                // Fallback para navegadores antigos
+                const textarea = document.createElement('textarea');
+                textarea.value = texto;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Lista copiada para a área de transferência!');
+            });
+        }
+
+        async function destruirInstancia(instanceId, instanceLabel) {
+            if (!confirm(`⚠️ Tem certeza que deseja destruir a instância "${instanceLabel}" (ID: ${instanceId})?\n\nEsta ação não pode ser desfeita!`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/destruir', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ids: [instanceId]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const resultado = data.resultados[0];
+                    if (resultado && resultado.success) {
+                        alert(`✅ Instância "${instanceLabel}" destruída com sucesso!`);
+                        atualizarMinhasMaquinas();
+                    } else {
+                        alert(`❌ Erro ao destruir instância: ${resultado ? resultado.message : 'Erro desconhecido'}`);
+                    }
+                } else {
+                    alert(`❌ Erro: ${data.error || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                console.error('Erro ao destruir instância:', error);
+                alert(`❌ Erro ao destruir instância: ${error.message}`);
+            }
+        }
+
+        async function destruirTodasInstancias() {
+            try {
+                // Buscar instâncias para confirmar quantas serão destruídas
+                const response = await fetch('/api/instancias');
+                const data = await response.json();
+
+                if (!data.success || !data.instancias || data.instancias.length === 0) {
+                    alert('Nenhuma instância encontrada para destruir.');
+                    return;
+                }
+
+                const totalInstancias = data.instancias.length;
+                const instanciasRunning = data.instancias.filter(inst => 
+                    inst.status && (inst.status.toLowerCase() === 'running' || inst.status.toLowerCase() === 'started')
+                ).length;
+
+                const mensagem = `⚠️ DESTRUIÇÃO EM LOTE - PARALELO!\n\n` +
+                    `Total: ${totalInstancias} instância(s)\n` +
+                    `Em execução: ${instanciasRunning}\n\n` +
+                    `Esta ação NÃO PODE ser desfeita!\n\n` +
+                    `Deseja continuar?`;
+
+                if (!confirm(mensagem)) {
+                    return;
+                }
+
+                // Segunda confirmação
+                if (!confirm('⚠️ Última confirmação: Deseja realmente destruir TODAS as instâncias EM PARALELO?')) {
+                    return;
+                }
+
+                // Mostrar modal com progresso
+                const modal = document.getElementById('resultModal');
+                const modalBody = document.getElementById('modalBody');
+                
+                modal.style.display = 'block';
+                modalBody.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 3em; margin-bottom: 20px;">🗑️</div>
+                        <h3 style="color: #f44336; margin-bottom: 15px;">DESTRUINDO EM PARALELO</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Processando ${totalInstancias} instâncias simultaneamente...</p>
+                        <div class="lote-progress">
+                            <div class="lote-progress-bar" style="width: 0%; background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);" id="destroyProgressBar">0%</div>
+                        </div>
+                        <p style="color: #999; font-size: 0.9em;">Aguarde, isso será muito rápido...</p>
+                    </div>
+                `;
+                
+                // Simula progresso
+                let progresso = 0;
+                const progressInterval = setInterval(() => {
+                    if (progresso < 90) {
+                        progresso += Math.random() * 20;
+                        if (progresso > 90) progresso = 90;
+                        const bar = document.getElementById('destroyProgressBar');
+                        if (bar) {
+                            bar.style.width = `${progresso}%`;
+                            bar.textContent = `${Math.round(progresso)}%`;
+                        }
+                    }
+                }, 200);
+
+                const inicio = performance.now();
+
+                const deleteResponse = await fetch('/api/destruir', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ids: ['all']
+                    })
+                });
+
+                clearInterval(progressInterval);
+                const bar = document.getElementById('destroyProgressBar');
+                if (bar) {
+                    bar.style.width = '100%';
+                    bar.textContent = '100%';
+                }
+
+                const deleteData = await deleteResponse.json();
+                const tempoCliente = ((performance.now() - inicio) / 1000).toFixed(2);
+
+                if (deleteData.success) {
+                    const sucessos = deleteData.sucessos || 0;
+                    const falhas = deleteData.falhas || 0;
+                    const tempoServidor = deleteData.tempo_total ? deleteData.tempo_total.toFixed(2) : tempoCliente;
+                    
+                    let html = `
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 3em; margin-bottom: 10px;">${falhas === 0 ? '💥' : '⚠️'}</div>
+                            <h3 style="color: ${falhas === 0 ? '#4caf50' : '#ff9800'};">DESTRUIÇÃO ${falhas === 0 ? 'COMPLETA' : 'FINALIZADA COM ERROS'}</h3>
+                        </div>
+                        
+                        <div class="lote-stats">
+                            <div class="lote-stat">
+                                <div class="lote-stat-value" style="color: #4caf50;">✅ ${sucessos}</div>
+                                <div class="lote-stat-label">Destruídas</div>
+                            </div>
+                            <div class="lote-stat">
+                                <div class="lote-stat-value" style="color: #f44336;">❌ ${falhas}</div>
+                                <div class="lote-stat-label">Falhas</div>
+                            </div>
+                            <div class="lote-stat">
+                                <div class="lote-stat-value" style="color: #2196f3;">⚡ ${tempoServidor}s</div>
+                                <div class="lote-stat-label">Tempo Total</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (deleteData.resultados && deleteData.resultados.length > 0) {
+                        html += `<h4 style="margin: 15px 0;">Detalhes:</h4>`;
+                        deleteData.resultados.forEach(result => {
+                            if (result.success) {
+                                html += `
+                                    <div class="result-item success">
+                                        <strong>✅ Instância #${result.instance_id}</strong> - ${result.message}
+                                    </div>
+                                `;
+                            } else {
+                                html += `
+                                    <div class="result-item error">
+                                        <strong>❌ Instância #${result.instance_id}</strong> - ${result.message}
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
+
+                    html += `
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button class="btn" onclick="fecharModal(); atualizarMinhasMaquinas();">
+                                🔄 Atualizar Lista
+                            </button>
+                        </div>
+                    `;
+
+                    modalBody.innerHTML = html;
+                    
+                } else {
+                    modalBody.innerHTML = `
+                        <div class="result-item error">
+                            <strong>❌ Erro ao destruir instâncias:</strong> ${deleteData.error || 'Erro desconhecido'}
+                        </div>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button class="btn-secondary" onclick="fecharModal();">Fechar</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao destruir todas as instâncias:', error);
+                const modalBody = document.getElementById('modalBody');
+                if (modalBody) {
+                    modalBody.innerHTML = `
+                        <div class="result-item error">
+                            <strong>❌ Erro:</strong> ${error.message}
+                        </div>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button class="btn-secondary" onclick="fecharModal();">Fechar</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
