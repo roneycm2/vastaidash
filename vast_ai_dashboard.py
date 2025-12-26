@@ -1,6 +1,6 @@
 """
 Dashboard Web para Vast.ai - Visualização de Máquinas Disponíveis
-VERSÃO OTIMIZADA - Com cache e timeout agressivo testestestetetete 
+VERSÃO OTIMIZADA - Com cache e timeout agressivo testestestetetete dadasdasdasdasda
 """
 
 from flask import Flask, render_template, jsonify, request
